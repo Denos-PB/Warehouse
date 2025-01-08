@@ -1,25 +1,10 @@
-using System; using System.Collections.Generic;
- using System.Text; using System.Threading.Tasks;
- using System;
- using System.Threading.Channels;
-
- /*Почнемо з систему складу, який вміє:
-- зберігати машинки +
-- лишати замовлення на поставку нових +
-- отримувати нові
-- отримувати замовлення на відправку 
-- відправляти старі. 
-Також, він має вміти сказати, які в нього зараз є позиції, яких позицій зараз немає на складі. 
-*/// Завдання:
-// 1. створити клас Storage +
-// 2. Створити метод який зберігатиме машинки +
-// 3. Створити метод який буде робити форму яка модель хто замовник кількіст до якого часу звідки умовно
-// 4. ВВодмлку що прибуло кількість час чи покрило замовлення звідки статус нова (заповнювати вручну)
-// 5. 
- namespace Vehicle
+namespace Warehouse
  {
      public class Storage
      {
+         private List<Car> cars = new List<Car>();
+         private List<Order> orders = new List<Order>();
+         private List<Order> sendingOrders = new List<Order>();
          public class Car
          {
              public string Name { get; set; }
@@ -33,83 +18,183 @@ using System; using System.Collections.Generic;
              public string Name { get; set; }
              public string Manufactory { get; set; }
              public int Count { get; set; }
-             public string Time {get;set;}
              public string Place { get; set; }
          }
-
-         static Car[] GetCarsFromUser()
+         // метод який добавляє машинку на склад
+         public void AddCarToStorage(Car newCar)
          {
-             Console.Write("Enter the number of cars: ");
-             if (!int.TryParse(Console.ReadLine(), out int n))
+             Console.Write("Name: ");
+             newCar.Name = Console.ReadLine();
+             Console.Write("Manufactory: ");
+             newCar.Manufactory = Console.ReadLine();
+             Console.Write("Count: ");
+             if (!int.TryParse(Console.ReadLine(), out int count))
              {
-                 Console.WriteLine("Invalid input. Please enter a number.");
-                 return null;
+                 Console.WriteLine("Invalid count. Setting count to 0.");
+                 newCar.Count = 0;
              }
-
-             Car[] cars = new Car[n];
-             for (int i = 0; i < n; i++)
+             else
              {
-                 cars[i] = new Car();
-                 Console.WriteLine($"\n Enter information about car {i + 1}:");
-                 Console.Write("Name: ");
-                 cars[i].Name = Console.ReadLine();
-                 Console.Write("Manufactory: ");
-                 cars[i].Manufactory = Console.ReadLine();
-                 Console.Write("Count: ");
-                 if (!int.TryParse(Console.ReadLine(), out int count))
+                 newCar.Count = count;
+             }
+             cars.Add(newCar);
+         }
+         // метод який подає замовлення постачальнику на заповнення скалду певними машинами
+         public void GetOrdersForIncomingCar(Order order)
+         {
+             Console.Write("\n Please fill out a short form for a new order ");
+             Console.Write("\nEnter car name: ");
+             order.Name = Console.ReadLine()?.Trim();
+             Console.Write("\nEnter car manufactory: ");
+             order.Manufactory = Console.ReadLine()?.Trim();
+             Console.Write("\nEnter car count: ");
+             order.Count = Convert.ToInt32(Console.ReadLine()?.Trim());
+             orders.Add(order);
+         }
+         // метод який буде відправляти машини замовникам і коли всі умови виконанаі видаляє машинку з масиву
+         public void GetOrdersForSendingCar(Order orderS)
+         {
+             Console.Write("\n Please fill out a short form for a new order ");
+             Console.Write("\nEnter car name: : ");
+             orderS.Name = Console.ReadLine()?.Trim();
+             Console.Write("\nEnter car manufactory: ");
+             orderS.Manufactory = Console.ReadLine()?.Trim();
+             Console.Write("\nEnter car count: ");
+             orderS.Count = Convert.ToInt32(Console.ReadLine()?.Trim());
+             Console.Write("\nEnter place name: ");
+             orderS.Place = Console.ReadLine()?.Trim();
+             
+             var car = cars.FirstOrDefault(c => c.Name == orderS.Name && c.Manufactory == orderS.Manufactory);
+    
+             if(car != null)
+             {
+                 if(car.Count >= orderS.Count)
                  {
-                     Console.WriteLine("Invalid count. Setting count to 0.");
-                     cars[i].Count = 0;
+                     car.Count -= orderS.Count; 
+                     
+                     if(car.Count == 0)
+                     {
+                         cars.Remove(car);
+                     }
+            
+                     sendingOrders.Add(orderS);
+                     Console.WriteLine("Order successfully added and cars reserved.");
                  }
                  else
                  {
-                     cars[i].Count = count;
+                     Console.WriteLine($"Error: Not enough cars in stock. Available: {car.Count}, Requested: {orderS.Count}");
                  }
              }
-             return cars;
-         }
-
-         static Order GetOrdersFromUser()
-         {
-             Order order = new Order();
-             Console.WriteLine("\n Please fill out a short form for a new order ");
-             Console.WriteLine("\nEnter car name: : ");
-             order.Name = Console.ReadLine()?.Trim();
-             Console.WriteLine("\nEnter car manufactory: ");
-             order.Manufactory = Console.ReadLine()?.Trim();
-             Console.WriteLine("\nEnter car count: ");
-             order.Count = Convert.ToInt32(Console.ReadLine()?.Trim());
-             Console.WriteLine("\nEnter order time(format: dd/mm/yyyy): ");
-             order.Time = Console.ReadLine()?.Trim();
-             Console.WriteLine("\nEnter place name: ");
-             order.Place = Console.ReadLine()?.Trim();
+             else
+             {
+                 Console.WriteLine("Error: Car not found in storage!");
+             }
              
-             return order;
+         }
+         // метод який дозволяє отримати машинку за замовленням 
+         public void RecieveCar()
+         {
+             Console.WriteLine("\nEnter details of received cars:");
+             Console.Write("Name: ");
+             string name = Console.ReadLine()?.Trim();
+             Console.Write("Manufactory: ");
+             string manufactory = Console.ReadLine()?.Trim();
+             Console.Write("Count: ");
+             int count;
+             if (!int.TryParse(Console.ReadLine(), out count))
+             {
+                 Console.WriteLine("Invalid count input.");
+                 return;
+             }
+             
+             var order = orders.FirstOrDefault(o => 
+                 o.Name == name && 
+                 o.Manufactory == manufactory);
+
+             if (order != null)
+             {
+                 if (count >= order.Count)
+                 {
+                     var existingCar = cars.FirstOrDefault(c => 
+                         c.Name == name && 
+                         c.Manufactory == manufactory);
+
+                     if (existingCar != null)
+                     {
+                         existingCar.Count += count;
+                     }
+                     else
+                     {
+                         cars.Add(new Car
+                         {
+                             Name = name,
+                             Manufactory = manufactory,
+                             Count = count
+                         });
+                     }
+                     
+                     orders.Remove(order);
+                     Console.WriteLine("Order fulfilled and cars added to storage!");
+                 }
+             }
+             else
+             {
+                 Console.WriteLine("Error: Car not found in orders!");
+             }
+         }
+         // метод який показує які є машинки на складі
+         public void ShowCars()
+         {
+             Console.Write("\nAvailable cars: ");
+             foreach (var car in cars)
+             {
+                 Console.WriteLine($"Model: {car.Name}");
+                 Console.WriteLine($"Manufactory: {car.Manufactory}");
+                 Console.WriteLine($"Count: {car.Count}");
+                 Console.WriteLine("----------------");
+             }
          }
          
-         static List<Order> GetMultipleOrders()
-         {
-             List<Order> orders = new List<Order>();
-             bool continueOrdering = true;
-
-             while (continueOrdering)
-             {
-                 orders.Add(GetOrdersFromUser());
-        
-                 Console.Write("\nWould you like to add another order? (Yes/No): ");
-                 continueOrdering = Console.ReadLine()?.Trim().ToLower() == "yes";
-             }
-
-             return orders;
-         }
-
-
-
          static void Main(string[] args)
          {
-             Car[] cars = GetCarsFromUser();
-             List<Order> orders = GetMultipleOrders();
-             
+             var storage = new Storage();
+             while (true)
+             {
+                 Console.WriteLine("\nSystem for warhouse:");
+                 Console.WriteLine("1 - Add car to the storage");
+                 Console.WriteLine("2 - Create order for incoming cars");
+                 Console.WriteLine("3 - Create order for sending cars");
+                 Console.WriteLine("4 - Get cars from orders");
+                 Console.WriteLine("5 - Show available cars");
+                 Console.WriteLine("6 - Exit");
+
+                 var choice = Console.ReadLine();
+
+                 switch (choice)
+                 {
+                     case "1":
+                         storage.AddCarToStorage(new Car());
+                         break;
+
+                     case "2":
+                         storage.GetOrdersForIncomingCar(new Order());
+                         break;
+                     case "3":
+                         storage.GetOrdersForSendingCar(new Order());
+                         break;
+                     
+                     case "4":
+                         storage.RecieveCar();
+                         break;
+                     
+                     case "5":
+                         storage.ShowCars();
+                         break;
+                     
+                     case "6":
+                         return;
+                 }
+             }
          }
      }
  }
