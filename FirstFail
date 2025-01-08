@@ -26,32 +26,15 @@ using System; using System.Collections.Generic;
              public string Manufactory { get; set; }
              public int Count { get; set; }
              
-             public void Deconstruct(out string name, out string manufactory, out int count)
-             {
-                 name = Name;
-                 manufactory = Manufactory;
-                 count = Count;
-             }
          }
 
          public class Order
          {
-             public string Company { get; set; }
              public string Name { get; set; }
              public string Manufactory { get; set; }
              public int Count { get; set; }
              public string Time {get;set;}
              public string Place { get; set; }
-             
-             public void Deconstruct(out string name, out string manufactory, out int count, out string time, out string place, out string company)
-             {
-                 name = Name;
-                 manufactory = Manufactory;
-                 count = Count;
-                 time = Time;
-                 place = Place;
-                 company = Company;
-             }
          }
 
          static Car[] GetCarsFromUser()
@@ -90,8 +73,6 @@ using System; using System.Collections.Generic;
          {
              Order order = new Order();
              Console.WriteLine("\n Please fill out a short form for a new order ");
-             Console.WriteLine("\nEnter your company name: ");
-             order.Company = Console.ReadLine();
              Console.WriteLine("\nEnter car name: : ");
              order.Name = Console.ReadLine()?.Trim();
              Console.WriteLine("\nEnter car manufactory: ");
@@ -105,19 +86,6 @@ using System; using System.Collections.Generic;
              
              return order;
          }
-         
-
-         // private static void DisplayOrder(Order order)
-         // {
-         //     Console.WriteLine("\n=== Order confirmation ===");
-         //     Console.WriteLine($"\nCustomer company name: {order.Company}");
-         //     Console.WriteLine($"\nCar model: {order.Name}");
-         //     Console.WriteLine($"\nManufacture: {order.Manufactory}");
-         //     Console.WriteLine($"\nQuantity: {order.Count}");
-         //     Console.WriteLine($"\nDelivery date: {order.Time}");
-         //     Console.WriteLine($"\nPlace name: {order.Place}");
-         //     Console.WriteLine("==============================");
-         // }
          
          static List<Order> GetMultipleOrders()
          {
@@ -135,15 +103,13 @@ using System; using System.Collections.Generic;
              return orders;
          }
 
-         static Car GetIncomingCar()
-         {
-             
-         }
+
 
          static void Main(string[] args)
          {
              Car[] cars = GetCarsFromUser();
              List<Order> orders = GetMultipleOrders();
+             
          }
      }
  }
